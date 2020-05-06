@@ -193,7 +193,7 @@ class LightsTests {
     }
 
     /**
-     * Produce a picture of triangles lighted by a spot light, a point light and a directional light
+     * Produce a picture of triangles lighted by a spot light, a point light and a directional light.
      */
     @Test
     public void trianglesMultiple() {
