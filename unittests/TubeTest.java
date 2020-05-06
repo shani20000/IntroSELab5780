@@ -22,6 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
     void getNormal() {
         Ray r = new Ray(new Point3D(1,0,0), new Vector(0,1,0));
         Tube t = new Tube(1, r);
-        assertEquals("Tube.getNormal() result is wrong", new Vector(-1, 0, 0), t.getNormal(new Point3D(2, 0, 0)));
+        assertEquals("Tube.getNormal() result is wrong", new Vector(-1, 0, 0), t.getNormal(new Point3D(0, 1, 0)));
     }
 }

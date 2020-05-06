@@ -12,7 +12,7 @@ import java.util.Arrays;
  * 
  * @author Dan
  */
-public class Polygon implements Geometry {
+public class Polygon extends Geometry {
     /**
      * List of polygon's vertices
      */
@@ -43,7 +43,8 @@ public class Polygon implements Geometry {
      *                                  <li>The polygon is concave (not convex></li>
      *                                  </ul>
      */
-    public Polygon(Point3D... vertices) {
+    public Polygon(Color emission, Material material, Point3D... vertices) {
+        super(emission, material);
         if (vertices.length < 3)
             throw new IllegalArgumentException("A polygon can't have less than 3 vertices");
         _vertices = Arrays.asList(vertices);
@@ -82,8 +83,63 @@ public class Polygon implements Geometry {
         }
     }
 
+
+    /**
+     * constructor
+     * @param emission
+     * @param vertices
+     */
+    public Polygon(Color emission, Point3D... vertices) {
+        this(emission,new Material(0,0,0),vertices);
+    }
+
+    /**
+     * constructor
+     * @param vertices
+     */
+    public Polygon(Point3D... vertices) {
+        this(Color.BLACK,new Material(0,0,0),vertices);
+    }
+
+
     @Override
     public Vector getNormal(Point3D point) {
         return _plane.get_normal();
+    }
+
+    @Override
+    public List<GeoPoint> findIntersections(Ray ray) {
+        Plane plane = new Plane(emission, material, this._vertices.get(0), this._vertices.get(1), this._vertices.get(2));
+        List<GeoPoint> intersections = plane.findIntersections(ray);
+        if(intersections == null)
+            return null;
+        if(this._vertices.get(0).equals(ray.getPoint()) || this._vertices.get(0).equals(intersections.get(0)))
+            return null;
+        Vector v = this._vertices.get(0).subtract(ray.getPoint());
+        Vector v1, v2, n;
+        v1=v;
+        if(this._vertices.get(1).equals(ray.getPoint()) || this._vertices.get(1).equals(intersections.get(0)))
+            return null;
+        v2 = this._vertices.get(1).subtract(ray.getPoint());
+        n = v1.crossProduct(v2).normalize();
+        if(isZero(ray.getVector().dotProduct(n)))
+            return null;
+        double sign = ray.getVector().dotProduct(n);
+        v1=v2;
+
+        for (Point3D vertex: _vertices.subList(2, _vertices.size()))
+        {
+            if(vertex.equals(ray.getPoint()) || vertex.equals(intersections.get(0)))
+                return null;
+            v2 = vertex.subtract(ray.getPoint());
+            n = v1.crossProduct(v2).normalize();
+            if(ray.getVector().dotProduct(n) * sign < 0 || isZero(ray.getVector().dotProduct(n)))
+                return null;
+            v1=v2;
+        }
+        n = v1.crossProduct(v).normalize();
+        if(ray.getVector().dotProduct(n) * sign < 0 || isZero(ray.getVector().dotProduct(n)))
+            return null;
+        return intersections;
     }
 }

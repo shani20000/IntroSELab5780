@@ -1,14 +1,38 @@
 package geometries;
 
-import primitives.Point3D;
-import primitives.Ray;
-import primitives.Vector;
+import primitives.*;
+
+import java.util.List;
+
 /**
  * Class Tube is the class representing a Tube
  */
-public class Tube extends RadialGeometry implements Geometry{
+public class Tube extends RadialGeometry {
 
     public Ray _ray;
+
+    /**
+     * constructor
+     *
+     * @param emission
+     * @param material
+     * @param _radius
+     * @param _ray
+     */
+    public Tube(Color emission, Material material, double _radius, Ray _ray) {
+        super(emission, material, _radius);
+        this._ray = _ray;
+    }
+
+    /**
+     * constructor
+     * @param emission
+     * @param _radius
+     * @param _ray
+     */
+    public Tube(Color emission, double _radius, Ray _ray) {
+        this(emission, new Material(0,0,0), _radius, _ray);
+    }
 
     /**
      * parameter constructor
@@ -16,8 +40,17 @@ public class Tube extends RadialGeometry implements Geometry{
      * @param _ray
      */
     public Tube(double _radius, Ray _ray) {
-        super(_radius);
-        this._ray = _ray; }
+        this(Color.BLACK, new Material(0,0,0), _radius, _ray);
+    }
+
+    /**
+     * copy constructor
+     * @param _radialGeometry to copy
+     */
+    public Tube(RadialGeometry _radialGeometry, Ray _ray) {
+        super(_radialGeometry);
+        this._ray = _ray;
+    }
 
     /**
      * getter
@@ -28,15 +61,14 @@ public class Tube extends RadialGeometry implements Geometry{
     }
 
     /**
-     * @param point a 3D point
+     * @param p a 3D point
      * @return the normal to the tube at the point p
      */
-    public Vector getNormal(Point3D point)
+    public Vector getNormal(Point3D p)
     {
-        Vector v = new Vector(point);
-        Point3D p = new Point3D(point);
-        double t = v.dotProduct(new Vector(p));
-        Point3D o = new Point3D(v.scale(t).getPoint());
+        Vector v = p.subtract((_ray.getPoint()));
+        double t = _ray.getVector().dotProduct(v);
+        Point3D o = _ray.getPoint().add(_ray.getVector().scale(t));
         Vector n = (p.subtract(o)).normalize();
         return n;
     }
@@ -49,5 +81,10 @@ public class Tube extends RadialGeometry implements Geometry{
         return "Tube{" +
                 "_ray=" + _ray + " Radius=" + super.toString() +
                 '}';
+    }
+
+    @Override
+    public List<GeoPoint> findIntersections(Ray ray) {
+        return null;
     }
 }

@@ -72,4 +72,9 @@ public class Ray {
                 Objects.equals(vector, ray.vector);
     }
 
+    public Point3D getIntersectionPoint(double t)
+    {
+        return(point.add(vector.scale(t)));
+    }
+
 }
