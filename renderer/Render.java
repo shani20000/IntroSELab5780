@@ -15,6 +15,11 @@ public class Render {
     Scene _scene;
 
     /**
+     *
+     */
+    private static final double DELTA = 0.1;
+
+    /**
      * constructor
      * @param _imageWriter
      * @param _scene
