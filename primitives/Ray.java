@@ -8,6 +8,22 @@ public class Ray {
 
     private Point3D point;
     private Vector vector;
+    private static final double DELTA = 0.1;
+
+    /**
+     * parameter constructor with delta
+     * @param head
+     * @param direction
+     * @param normal
+     */
+    public Ray(Point3D head, Vector direction, Vector normal)
+    {
+        int sign = 1;
+        if(direction.dotProduct(normal)<0)
+            sign = -1;
+        point = head.add(normal.scale(sign*DELTA));
+        vector = direction.normalize();
+    }
 
     /**
      * parameter constructor
@@ -18,7 +34,7 @@ public class Ray {
         if(vector.length()!=1)
             vector.normalize();
         this.point = point;
-        this.vector = vector;
+        this.vector = vector.normalize();
     }
 
     /**
