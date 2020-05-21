@@ -1,22 +1,15 @@
 package renderer;
 
 import elements.Camera;
-import elements.DirectionalLight;
 import elements.LightSource;
-import elements.PointLight;
-import geometries.Geometries;
-import geometries.Geometry;
 import geometries.Intersectable;
 import geometries.Intersectable.GeoPoint;
 import primitives.*;
 import scene.Scene;
 
-import java.util.Collections;
 import java.util.List;
-import java.awt.color.*;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static primitives.Util.alignZero;
 
@@ -113,8 +106,10 @@ public class Render {
             for (LightSource lightSource : lights) {
                 Vector l = lightSource.getL(geoPoint.point).normalize();
                 if (n.dotProduct(l) * n.dotProduct(v) > 0) {
-                    if (unshaded(lightSource, l, n, geoPoint)) {
-                        Color lightIntensity = lightSource.getIntensity(geoPoint.point);
+                    double ktr = transparency(lightSource, l, n, geoPoint);
+                    if (ktr * k > MIN_CALC_COLOR_K) {
+                    //if (unshaded(lightSource, l, n, geoPoint)) {
+                        Color lightIntensity = lightSource.getIntensity(geoPoint.point).scale(ktr);
                         Color diffuse = calcDiffusive(kd, l, n, lightIntensity);
                         Color specular = calcSpecular(ks, l, n, v, nShininess, lightIntensity);
                         resultColor = resultColor.add(diffuse, specular);
@@ -219,12 +214,13 @@ public class Render {
 
     /**
      * this function checks if a geometry is shaded
-     *
+     * @param light the light source
      * @param l  the vector from the light source to the point
      * @param n  the normal of the geometry at the point
      * @param gp the point
      * @return 1 if the geometry is unshaded or 0 else
      */
+    /**
     private boolean unshaded(LightSource light, Vector l, Vector n, GeoPoint gp) {
         Vector lightDirection = l.scale(-1); // from point to light source
         Ray lightRay = new Ray(gp.point, lightDirection, n);
@@ -245,6 +241,37 @@ public class Render {
                 return false;
         }
         return true;
+    }
+     */
+
+    /**
+     * this function checks if a geometry is shaded
+     * @param light the light source
+     * @param l  the vector from the light source to the point
+     * @param n  the normal of the geometry at the point
+     * @param gp the point
+     * @return 1 if the geometry is unshaded or 0 else
+     */
+    private double transparency(LightSource light, Vector l, Vector n, GeoPoint gp) {
+        Vector lightDirection = l.scale(-1); // from point to light source
+        Ray lightRay = new Ray(gp.point, lightDirection, n);
+        //Vector delta = n.scale(n.dotProduct(lightDirection) > 0 ? DELTA : -DELTA);
+        //Point3D point = gp.point.add(delta);
+        List<GeoPoint> intersections = _scene.getGeometries().findIntersections(lightRay);
+        if (intersections == null)
+            return 1.0;
+        double distance = light.getDistance(gp.point);
+        double ktr = 1.0;
+        for (GeoPoint interPoint : intersections) {
+            //    if (gp.geometry.getMaterial().get_kT() == 0)
+            //        return false;
+            if (alignZero(interPoint.point.distance(gp.point) - distance) <=0 ) {
+                ktr *= gp.geometry.getMaterial().get_kT();
+                if (ktr < MIN_CALC_COLOR_K)
+                    return 0.0;
+            }
+        }
+        return ktr;
     }
 
     /**
