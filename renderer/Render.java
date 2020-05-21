@@ -20,7 +20,7 @@ public class Render {
     private static final double MIN_CALC_COLOR_K = 0.001;
 
     /**
-     * a constant for moving rays beginning size for shading, transparency and reflection rays.
+     * A constant for moving rays beginning size for shading, transparency and reflection rays.
      */
     /**
      * constructor
