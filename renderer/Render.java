@@ -266,7 +266,7 @@ public class Render {
             //    if (gp.geometry.getMaterial().get_kT() == 0)
             //        return false;
             if (alignZero(interPoint.point.distance(gp.point) - distance) <=0 ) {
-                ktr *= gp.geometry.getMaterial().get_kT();
+                ktr *= interPoint.geometry.getMaterial().get_kT();
                 if (ktr < MIN_CALC_COLOR_K)
                     return 0.0;
             }
