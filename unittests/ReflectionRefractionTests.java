@@ -109,11 +109,10 @@ public class ReflectionRefractionTests {
 	}
 
 	/**
-	 * Produce a picture of a two triangles lighted by a spot light with a partially transparent Sphere
-	 *  producing partial shadow
+	 * Produce a picture of many geometries lighted by a spot light
 	 */
 	@Test
-	public void MultyTransparentAndMirror() {
+	public void MultiTransparentAndMirror() {
 		Scene scene = new Scene("Test scene");
 		scene.setCamera(new Camera(new Point3D(0, 0, -1000), new Vector(0, 0, 1), new Vector(0, -1, 0)));
 		scene.setDistance(1000);
@@ -135,7 +134,7 @@ public class ReflectionRefractionTests {
 		scene.addLights(new SpotLight(new Color(700, 400, 400), //
 				new Point3D(60, -50, 0), new Vector(0, 0, 1), 1, 4E-5, 2E-7));
 
-		ImageWriter imageWriter = new ImageWriter("Multy Transparent And Mirror", 200, 200, 600, 600);
+		ImageWriter imageWriter = new ImageWriter("Multi Transparent And Mirror", 200, 200, 600, 600);
 		Render render = new Render(imageWriter, scene);
 
 		render.renderImage();
