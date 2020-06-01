@@ -14,10 +14,12 @@ import java.util.ArrayList;
 import static primitives.Util.alignZero;
 
 public class Render {
-    ImageWriter _imageWriter;
-    Scene _scene;
+    private final ImageWriter _imageWriter;
+    private final Scene _scene;
+    private double _superSampleDensity = 0d;
     private static final int MAX_CALC_COLOR_LEVEL = 10;
     private static final double MIN_CALC_COLOR_K = 0.001;
+
 
     /**
      * A constant for moving rays beginning size for shading, transparency and reflection rays.
@@ -31,6 +33,11 @@ public class Render {
     public Render(ImageWriter _imageWriter, Scene _scene) {
         this._imageWriter = _imageWriter;
         this._scene = _scene;
+    }
+
+    public void set_superSampleDensity(double _superSampleDensity) {
+        if (_superSampleDensity >= 0d)
+            this._superSampleDensity = _superSampleDensity;
     }
 
     /**
@@ -47,23 +54,45 @@ public class Render {
         int width = (int) _imageWriter.getWidth();
         int height = (int) _imageWriter.getHeight();
         Ray ray;
-
-        // for each point (i,j) in the view plane
-        // i is pixel row number and j is pixel in the row number
-        for (int i = 0; i < nY; i++) {
-            for (int j = 0; j < nX; j++) {
-                ray = camera.constructRayThroughPixel(nX, nY, j, i, distance, width, height);
-                List<GeoPoint> intersectionPoints = geometries.findIntersections(ray);
-                if (intersectionPoints == null)
-                    _imageWriter.writePixel(j, i, background);
-                else {
-                    GeoPoint clo = getClosestPoint(intersectionPoints);
+        if(_superSampleDensity==0d) {
+            // for each point (i,j) in the view plane
+            // i is pixel row number and j is pixel in the row number
+            for (int i = 0; i < nY; i++) {
+                for (int j = 0; j < nX; j++) {
+                    ray = camera.constructRayThroughPixel(nX, nY, j, i, distance, width, height);
+                    List<GeoPoint> intersectionPoints = geometries.findIntersections(ray);
+                    if (intersectionPoints == null)
+                        _imageWriter.writePixel(j, i, background);
+                    else {
+                        GeoPoint closestPoint = getClosestPoint(intersectionPoints);
+                        _imageWriter.writePixel(j, i, closestPoint == null ? _scene.getBackground().getColor() : calcColor(closestPoint, ray).getColor());
+                    }
                 }
-                GeoPoint closestPoint = getClosestPoint(intersectionPoints);
-               // if (closestPoint != null)
-                _imageWriter.writePixel(j, i, closestPoint == null ? _scene.getBackground().getColor() : calcColor(closestPoint, ray).getColor());
-               // _imageWriter.writePixel(j, i, calcColor(closestPoint, ray).getColor());
-
+            }
+        }
+        else //this is the super sampling
+        {
+            for (int i = 0; i < nY; i++) {
+                for (int j = 0; j < nX; j++) {
+                    ray = camera.constructRayThroughPixel(nX, nY, j, i, distance, width, height);
+                    List<GeoPoint> intersectionPoints = geometries.findIntersections(ray);
+                    GeoPoint closestPoint = getClosestPoint(intersectionPoints);
+                    if (intersectionPoints == null)
+                        _imageWriter.writePixel(j, i, background);
+                    else {
+                        List<Ray> rays = camera.constructSuperSamplingRaysThroughPixel(ray, closestPoint.point, _superSampleDensity, 50);
+                        Color avgColor = Color.BLACK;
+                        for (Ray r : rays) {
+                            closestPoint = findClosestIntersection(r);
+                            if (closestPoint == null)
+                                avgColor = avgColor.add(new Color(background));
+                            else
+                                avgColor = avgColor.add(calcColor(closestPoint, r));
+                        }
+                        avgColor = avgColor.scale(1d / rays.size());
+                        _imageWriter.writePixel(j, i, avgColor.getColor());
+                    }
+                }
             }
         }
     }

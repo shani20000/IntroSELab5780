@@ -32,6 +32,7 @@ class LightsTests {
 
         ImageWriter imageWriter = new ImageWriter("sphereDirectional", 150, 150, 500, 500);
         Render render = new Render(imageWriter, scene);
+        
 
         render.renderImage();
         render.writeToImage();
