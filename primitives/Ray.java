@@ -113,13 +113,12 @@ public class Ray {
         }
         Random rnd = new Random();
         double[] randomNumbers = rnd.doubles(num * 2, delta * (-1), delta).distinct().toArray();
-        Vector direction = mainRay.getVector();
+        //Vector direction = mainRay.getVector();
         Point3D rayPoint = mainRay.getPoint();
         Vector v1 = new Vector(1, 0, 0);
         Vector v2 = new Vector(0, 1, 0);
         LinkedList<Ray> rays = new LinkedList<>();
-
-
+        rays.add(mainRay);
         for(int i=0; i < Math.min(num, randomNumbers.length-1); i++) {
             Point3D pXY = point;
             pXY = pXY.add(v1.scale(randomNumbers[i]).add(v2.scale(randomNumbers[i+1])));
@@ -127,5 +126,4 @@ public class Ray {
         }
         return rays;
     }
-
 }

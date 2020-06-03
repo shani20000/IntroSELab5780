@@ -112,7 +112,7 @@ public class miniProject1Test {
         ImageWriter imageWriter = new ImageWriter("mp1WithSuperSampling", 200, 200, 400, 400);
         Render render = new Render(imageWriter, scene);
         //render.set_softShadowDensity(3);
-        render.set_superSampleDensity(0.5);
+        render.set_superSampleDensity(0.25);
         render.renderImage();
         render.writeToImage();
     }
