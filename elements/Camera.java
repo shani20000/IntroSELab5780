@@ -96,6 +96,15 @@ public class Camera {
         return new Ray(p0, vij.normalize());
     }
 
+    /**
+     *
+     * @param mainRay
+     * @param point
+     * @param delta
+     * @param num
+     * @return
+     */
+    /**
     public List<Ray> constructSuperSamplingRaysThroughPixel(Ray mainRay, Point3D point, double delta, int num) {
         if (isZero(mainRay.getPoint().distance(point))) {
             throw new IllegalArgumentException("Distance can't be 0");
@@ -116,5 +125,6 @@ public class Camera {
         }
         return rays;
     }
+     */
 }
 

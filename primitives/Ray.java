@@ -1,6 +1,12 @@
 package primitives;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Random;
+
+import static primitives.Util.isZero;
+
 /**
  * Class Ray is the class representing a Ray
  */
@@ -91,6 +97,35 @@ public class Ray {
     public Point3D getIntersectionPoint(double t)
     {
         return(point.add(vector.scale(t)));
+    }
+
+    /**
+     *This function constructs rays from a point
+     * @param mainRay
+     * @param point
+     * @param delta
+     * @param num
+     * @return
+     */
+    public static List<Ray> constructRayBeam(Ray mainRay, Point3D point, double delta, int num) {
+        if (isZero(mainRay.getPoint().distance(point))) {
+            throw new IllegalArgumentException("Distance can't be 0");
+        }
+        Random rnd = new Random();
+        double[] randomNumbers = rnd.doubles(num * 2, delta * (-1), delta).distinct().toArray();
+        Vector direction = mainRay.getVector();
+        Point3D rayPoint = mainRay.getPoint();
+        Vector v1 = new Vector(1, 0, 0);
+        Vector v2 = new Vector(0, 1, 0);
+        LinkedList<Ray> rays = new LinkedList<>();
+
+
+        for(int i=0; i < Math.min(num, randomNumbers.length-1); i++) {
+            Point3D pXY = point;
+            pXY = pXY.add(v1.scale(randomNumbers[i]).add(v2.scale(randomNumbers[i+1])));
+            rays.add(new Ray(rayPoint, pXY.subtract(rayPoint).normalize()));
+        }
+        return rays;
     }
 
 }

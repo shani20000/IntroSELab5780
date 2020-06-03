@@ -1,7 +1,9 @@
 package renderer;
 
+import com.sun.deploy.security.SelectableSecurityManager;
 import elements.Camera;
 import elements.LightSource;
+import elements.PointLight;
 import geometries.Intersectable;
 import geometries.Intersectable.GeoPoint;
 import primitives.*;
@@ -17,11 +19,11 @@ public class Render {
     private final ImageWriter _imageWriter;
     private final Scene _scene;
     private double _superSampleDensity = 0d;
+    private double _softShadowDensity = 0d;
     private static final int MAX_CALC_COLOR_LEVEL = 10;
     private static final double MIN_CALC_COLOR_K = 0.001;
 
-
-    /**
+/**
      * A constant for moving rays beginning size for shading, transparency and reflection rays.
      */
     /**
@@ -35,9 +37,21 @@ public class Render {
         this._scene = _scene;
     }
 
+    /**
+     * setter
+     * @param _superSampleDensity
+     */
     public void set_superSampleDensity(double _superSampleDensity) {
         if (_superSampleDensity >= 0d)
             this._superSampleDensity = _superSampleDensity;
+    }
+
+    /**
+     * setter
+     * @param _softShadowDensity
+     */
+    public void set_softShadowDensity(double _softShadowDensity) {
+        this._softShadowDensity = _softShadowDensity;
     }
 
     /**
@@ -80,7 +94,8 @@ public class Render {
                     if (intersectionPoints == null)
                         _imageWriter.writePixel(j, i, background);
                     else {
-                        List<Ray> rays = camera.constructSuperSamplingRaysThroughPixel(ray, closestPoint.point, _superSampleDensity, 50);
+                       // List<Ray> rays = camera.constructSuperSamplingRaysThroughPixel(ray, closestPoint.point, _superSampleDensity, 50);
+                        List<Ray> rays = Ray.constructRayBeam(ray, closestPoint.point, _superSampleDensity, 50);
                         Color avgColor = Color.BLACK;
                         for (Ray r : rays) {
                             closestPoint = findClosestIntersection(r);
@@ -135,7 +150,7 @@ public class Render {
             for (LightSource lightSource : lights) {
                 Vector l = lightSource.getL(geoPoint.point).normalize();
                 if (n.dotProduct(l) * n.dotProduct(v) > 0) {
-                    double ktr = transparency(lightSource, l, n, geoPoint);
+                    double ktr = transparency(lightSource, l, n, geoPoint, _softShadowDensity);
                     if (ktr * k > MIN_CALC_COLOR_K) {
                     //if (unshaded(lightSource, l, n, geoPoint)) {
                         Color lightIntensity = lightSource.getIntensity(geoPoint.point).scale(ktr);
@@ -153,7 +168,7 @@ public class Render {
             Ray reflectedRay = constructReflectedRay(inRay.getVector(), n, geoPoint);
             GeoPoint reflectedPoint = findClosestIntersection(reflectedRay);
             if (reflectedPoint != null)
-                resultColor = resultColor.add(calcColor(reflectedPoint, reflectedRay, level - 1, kKr).scale(kr));
+                 resultColor = resultColor.add(calcColor(reflectedPoint, reflectedRay, level - 1, kKr).scale(kr));
         }
         double kt = geoPoint.geometry.getMaterial().get_kT();
         double kKt = k * kt;
@@ -273,6 +288,11 @@ public class Render {
     }
      */
 
+
+
+
+
+
     /**
      * this function checks if a geometry is shaded
      * @param light the light source
@@ -281,27 +301,62 @@ public class Render {
      * @param gp the point
      * @return 1 if the geometry is unshaded or 0 else
      */
-    private double transparency(LightSource light, Vector l, Vector n, GeoPoint gp) {
+    private double transparency(LightSource light, Vector l, Vector n, GeoPoint gp, double _softShadowDensity) {
         Vector lightDirection = l.scale(-1); // from point to light source
         Ray lightRay = new Ray(gp.point, lightDirection, n);
-        //Vector delta = n.scale(n.dotProduct(lightDirection) > 0 ? DELTA : -DELTA);
-        //Point3D point = gp.point.add(delta);
-        List<GeoPoint> intersections = _scene.getGeometries().findIntersections(lightRay);
-        if (intersections == null)
-            return 1.0;
-        double distance = light.getDistance(gp.point);
-        double ktr = 1.0;
-        for (GeoPoint interPoint : intersections) {
-            //    if (gp.geometry.getMaterial().get_kT() == 0)
-            //        return false;
-            if (alignZero(interPoint.point.distance(gp.point) - distance) <=0 ) {
-                ktr *= interPoint.geometry.getMaterial().get_kT();
-                if (ktr < MIN_CALC_COLOR_K)
-                    return 0.0;
+        if (_softShadowDensity == 0d) {
+            //Vector delta = n.scale(n.dotProduct(lightDirection) > 0 ? DELTA : -DELTA);
+            //Point3D point = gp.point.add(delta);
+            List<GeoPoint> intersections = _scene.getGeometries().findIntersections(lightRay);
+            if (intersections == null)
+                return 1.0;
+            double distance = light.getDistance(gp.point);
+            double ktr = 1.0;
+            for (GeoPoint interPoint : intersections) {
+                //    if (gp.geometry.getMaterial().get_kT() == 0)
+                //        return false;
+                if (alignZero(interPoint.point.distance(gp.point) - distance) <= 0) {
+                    ktr *= interPoint.geometry.getMaterial().get_kT();
+                    if (ktr < MIN_CALC_COLOR_K)
+                        return 0.0;
+                }
             }
+            return ktr;
+        } else {
+            List<Ray> rays;
+            /////////////רק אם זה לא שמש
+            if (light.getDistance(gp.point) != Double.POSITIVE_INFINITY) //if this is not a directional light
+                rays = Ray.constructRayBeam(lightRay, ((PointLight) light).get_position(), _softShadowDensity, 50);
+            else
+                rays = Ray.constructRayBeam(lightRay, (gp.point.add(l.scale(1000))), _softShadowDensity, 50);
+            double sum = 0;
+            for (Ray r : rays) {
+                List<GeoPoint> intersections = _scene.getGeometries().findIntersections(r);
+                if (intersections == null)
+                    sum += 1.0;
+                else {
+                    double distance = light.getDistance(gp.point);
+                    double temp = 1.0;
+                    for (GeoPoint interPoint : intersections) {
+                        if (alignZero(interPoint.point.distance(gp.point) - distance) <= 0) {
+                            temp *= interPoint.geometry.getMaterial().get_kT();
+                            if (temp < MIN_CALC_COLOR_K) {
+                                temp = 0.0;
+                                break;
+                            }
+                        }
+                    }
+                    sum += temp;
+                }
+            }
+            double ktr = sum / rays.size();
+            return ktr;
         }
-        return ktr;
     }
+       // return 0.0; //////////////////בגלל השמש
+
+
+
 
     /**
      * calculate a reflected ray

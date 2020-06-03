@@ -49,6 +49,10 @@ public class PointLight extends Light implements LightSource {
 
     }
 
+    public Point3D get_position() {
+        return _position;
+    }
+
     /**
      *
      * @param point
