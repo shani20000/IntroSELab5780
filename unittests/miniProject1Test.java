@@ -53,10 +53,11 @@ public class miniProject1Test {
 
         scene.addLights(new SpotLight(new primitives.Color(Color.WHITE),
                 new Point3D(-100, -10, -200), new Vector(1, -1, 3), 1, 1E-5, 1.5E-7),
-                new PointLight(new primitives.Color(new Color(172, 165, 9, 153)),
-                        new Point3D(0, -500, 300), 1,0.00001, 0.000001),
-                new DirectionalLight(new primitives.Color(Color.WHITE),
-                       new Vector(-1,1,-1)));
+                new PointLight(new primitives.Color(Color.YELLOW),
+                        new Point3D(-50, -95, 0), 1,0.00005, 0.00005)
+                //new DirectionalLight(new primitives.Color(Color.WHITE),
+                //       new Vector(-1,1,-1))
+                      );
 
         ImageWriter imageWriter = new ImageWriter("mp1", 200, 200, 400, 400);
         Render render = new Render(imageWriter, scene);
@@ -104,15 +105,16 @@ public class miniProject1Test {
 
         scene.addLights(new SpotLight(new primitives.Color(Color.WHITE),
                         new Point3D(-100, -10, -200), new Vector(1, -1, 3), 1, 1E-5, 1.5E-7),
-                new PointLight(new primitives.Color(new Color(172, 165, 9, 153)),
-                        new Point3D(0, -500, 300), 1,0.00001, 0.000001),
-                new DirectionalLight(new primitives.Color(Color.WHITE),
-                        new Vector(-1,1,-1)));
+                new PointLight(new primitives.Color(Color.YELLOW),
+                        new Point3D(-50, -95, 0), 1,0.00005, 0.00005)
+                //new DirectionalLight(new primitives.Color(Color.WHITE),
+                //        new Vector(-1,1,-1))
+    );
 
         ImageWriter imageWriter = new ImageWriter("mp1WithSuperSampling", 200, 200, 400, 400);
         Render render = new Render(imageWriter, scene);
         //render.set_softShadowDensity(3);
-        render.set_superSampleDensity(0.25);
+        render.set_superSampleDensity(0.5);
         render.renderImage();
         render.writeToImage();
     }
@@ -155,14 +157,15 @@ public class miniProject1Test {
 
         scene.addLights(new SpotLight(new primitives.Color(Color.WHITE),
                         new Point3D(-100, -10, -200), new Vector(1, -1, 3), 1, 1E-5, 1.5E-7),
-                new PointLight(new primitives.Color(new Color(172, 165, 9, 153)),
-                        new Point3D(0, -500, 300), 1,0.00001, 0.000001),
-                new DirectionalLight(new primitives.Color(Color.WHITE),
-                        new Vector(-1,1,-1)));
+                new PointLight(new primitives.Color(Color.YELLOW),
+                        new Point3D(-50, -95, 0), 1,0.00005, 0.00005)
+               // new DirectionalLight(new primitives.Color(Color.WHITE),
+               //         new Vector(-1,1,-1))
+                        );
 
         ImageWriter imageWriter = new ImageWriter("mp1WithSoftShadows", 200, 200, 400, 400);
         Render render = new Render(imageWriter, scene);
-        render.set_softShadowDensity(3);
+        render.set_softShadowDensity(5);
         //render.set_superSampleDensity(0.5);
         render.renderImage();
         render.writeToImage();
@@ -203,8 +206,8 @@ public class miniProject1Test {
 
         scene.addLights(new SpotLight(new primitives.Color(Color.WHITE),
                         new Point3D(-100, -10, -200), new Vector(1, -1, 3), 1, 1E-5, 1.5E-7),
-                new PointLight(new primitives.Color(new Color(172, 165, 9, 153)),
-                        new Point3D(0, -500, 300), 1,0.00001, 0.000001)
+                new PointLight(new primitives.Color(Color.YELLOW),
+                        new Point3D(-50, -95, 0), 1,0.00005, 0.00005)
                // new DirectionalLight(new primitives.Color(Color.WHITE),
                 //        new Vector(-1,1,-1))
                         );
