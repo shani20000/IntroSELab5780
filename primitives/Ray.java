@@ -16,6 +16,7 @@ public class Ray {
     private Vector vector;
     private static final double DELTA = 0.1;
 
+    private static Random rnd = new Random();
     /**
      * parameter constructor with delta
      * @param head
@@ -94,36 +95,44 @@ public class Ray {
                 Objects.equals(vector, ray.vector);
     }
 
+    /**
+     *
+     * @param t
+     * @return
+     */
     public Point3D getIntersectionPoint(double t)
     {
         return(point.add(vector.scale(t)));
     }
 
+
     /**
-     *This function constructs rays from a point
+     * This function constructs beam rays from a point
      * @param mainRay
      * @param point
-     * @param delta
+     * @param radius
      * @param num
-     * @return
+     * @param vUp
+     * @param vRight
+     * @return a list of rays
      */
-    public static List<Ray> constructRayBeam(Ray mainRay, Point3D point, double delta, int num) {
-        if (isZero(mainRay.getPoint().distance(point))) {
-            throw new IllegalArgumentException("Distance can't be 0");
-        }
-        Random rnd = new Random();
-        double[] randomNumbers = rnd.doubles(num * 2, delta * (-1), delta).distinct().toArray();
-        //Vector direction = mainRay.getVector();
-        Point3D rayPoint = mainRay.getPoint();
-        Vector v1 = new Vector(1, 0, 0);
-        Vector v2 = new Vector(0, 1, 0);
-        LinkedList<Ray> rays = new LinkedList<>();
-        rays.add(mainRay);
-        for(int i=0; i < Math.min(num, randomNumbers.length-1); i++) {
-            Point3D pXY = point;
-            pXY = pXY.add(v1.scale(randomNumbers[i]).add(v2.scale(randomNumbers[i+1])));
-            rays.add(new Ray(rayPoint, pXY.subtract(rayPoint).normalize()));
-        }
-        return rays;
-    }
+
+     public static List<Ray> constructRayBeam(Ray mainRay, Point3D point, double radius, int num, Vector vUp, Vector vRight) {
+     if (isZero(mainRay.getPoint().distance(point))) {
+     throw new IllegalArgumentException("Distance can't be 0");
+     }
+     Random rnd = new Random();
+     double[] randomNumbers = rnd.doubles(num * 2, radius * (-1), radius).distinct().toArray();
+     //Vector direction = mainRay.getVector();
+     Point3D rayPoint = mainRay.getPoint();
+     LinkedList<Ray> rays = new LinkedList<>();
+     rays.add(mainRay);
+     for(int i=0; i < Math.min(num, randomNumbers.length-1); i++) {
+         Point3D pXY = point;
+         pXY = pXY.add(vUp.scale(randomNumbers[i]).add(vRight.scale(randomNumbers[i + 1])));
+         rays.add(new Ray(rayPoint, pXY.subtract(rayPoint).normalize()));
+     }
+     return rays;
+     }
 }
+

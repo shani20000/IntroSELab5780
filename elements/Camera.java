@@ -79,6 +79,25 @@ public class Camera {
     public Ray constructRayThroughPixel(int nX, int nY,
                                         int j, int i, double screenDistance,
                                         double screenWidth, double screenHeight) {
+        Point3D pij = findAPixel(nX, nY, j, i, screenDistance, screenWidth, screenHeight);
+        Vector vij = pij.subtract(p0);
+        return new Ray(p0, vij.normalize());
+    }
+
+    /**
+     * This function finds the point of the pixel on the view plane
+     * @param nX
+     * @param nY
+     * @param j
+     * @param i
+     * @param screenDistance
+     * @param screenWidth
+     * @param screenHeight
+     * @return
+     */
+    public Point3D findAPixel(int nX, int nY,
+                                        int j, int i, double screenDistance,
+                                        double screenWidth, double screenHeight) {
         if (isZero(screenDistance)) {
             throw new IllegalArgumentException("Distance can't be 0");
         }
@@ -92,8 +111,7 @@ public class Camera {
             pij = pij.add(vRight.scale(xJ));
         if (!isZero(yI))
             pij = pij.add(vUp.scale(-yI));
-        Vector vij = pij.subtract(p0);
-        return new Ray(p0, vij.normalize());
+        return pij;
     }
 
     /**
