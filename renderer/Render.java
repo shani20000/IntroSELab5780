@@ -2,6 +2,7 @@ package renderer;
 
 import com.sun.deploy.security.SelectableSecurityManager;
 import elements.Camera;
+import elements.DirectionalLight;
 import elements.LightSource;
 import elements.PointLight;
 import geometries.Intersectable;
@@ -302,7 +303,7 @@ public class Render {
         double radius =(_imageWriter.getWidth()/_imageWriter.getNx() +_imageWriter.getHeight()/_imageWriter.getNy())/2d;
         Vector lightDirection = l.scale(-1); // from point to light source
         Ray lightRay = new Ray(gp.point, lightDirection, n);
-        if (_softShadowDensity == 0d || light.getDistance(gp.point) == Double.POSITIVE_INFINITY){ //if there is no soft shadows or the light source is directional) {
+        if (_softShadowDensity == 0d || light.getClass() == DirectionalLight.class){ //if there is no soft shadows or the light source is directional) {
             List<GeoPoint> intersections = _scene.getGeometries().findIntersections(lightRay);
             if (intersections == null)
                 return 1.0;

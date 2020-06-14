@@ -121,7 +121,6 @@ public class Ray {
      if (isZero(mainRay.getPoint().distance(point))) {
      throw new IllegalArgumentException("Distance can't be 0");
      }
-     Random rnd = new Random();
      double[] randomNumbers = rnd.doubles(num * 2, radius * (-1), radius).distinct().toArray();
      //Vector direction = mainRay.getVector();
      Point3D rayPoint = mainRay.getPoint();
