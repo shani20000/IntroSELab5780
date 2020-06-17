@@ -155,7 +155,7 @@ public class miniProject1Test {
 
         ImageWriter imageWriter = new ImageWriter("mp1WithSoftShadows", 200, 200, 400, 400);
         Render render = new Render(imageWriter, scene);
-        render.set_softShadowDensity(5);
+        render.set_softShadowRadius(5);
         //render.set_superSampleDensity(0.5);
         render.renderImage();
         render.writeToImage();
@@ -204,7 +204,7 @@ public class miniProject1Test {
 
         ImageWriter imageWriter = new ImageWriter("mp1WithSuperSamplingAndSoftShadows", 200, 200, 400, 400);
         Render render = new Render(imageWriter, scene);
-        render.set_softShadowDensity(3);
+        render.set_softShadowRadius(3);
         render.set_superSampleDensity(0.5);
         render.renderImage();
         render.writeToImage();
@@ -223,16 +223,16 @@ public class miniProject1Test {
         scene.setAmbientLight(new AmbientLight(primitives.Color.BLACK, 0));
 
         scene.addGeometries(new Sphere(new primitives.Color(java.awt.Color.BLUE), new Material(0.5, 0.5, 30), //
-                        60, new Point3D(0, 0, 200)), //
+                        60, new Point3D(0, 0, 200)),
                 new Triangle(new primitives.Color(java.awt.Color.BLUE), new Material(0.5, 0.5, 30), //
                         new Point3D(-70, 40, 0), new Point3D(-40, 70, 0), new Point3D(-68, 68, 4)));
 
-        scene.addLights(new SpotLight(new primitives.Color(400, 240, 0), //
+        scene.addLights(new SpotLight(new primitives.Color(400, 240, 0),
                 new Point3D(-100, 100, -200), new Vector(1, -1, 3), 1, 1E-5, 1.5E-7));
 
         ImageWriter imageWriter = new ImageWriter("softShadow", 200, 200, 400, 400);
         Render render = new Render(imageWriter, scene);
-        render.set_softShadowDensity(3);
+        render.set_softShadowRadius(3);
         render.set_superSampleDensity(0.33);
         render.renderImage();
         render.writeToImage();
@@ -295,7 +295,7 @@ public class miniProject1Test {
 
         ImageWriter imageWriter = new ImageWriter("shadow with transparency Soft shadows SuperSampling", 200, 200, 600, 600);
         Render render = new Render(imageWriter, scene);
-        render.set_softShadowDensity(3);
+        render.set_softShadowRadius(3);
         render.set_superSampleDensity(0.35);
         render.renderImage();
         render.writeToImage();
