@@ -1,19 +1,13 @@
 package renderer;
 
-import elements.Camera;
-import elements.DirectionalLight;
-import elements.LightSource;
-import elements.PointLight;
+import elements.*;
 import geometries.Intersectable;
 import geometries.Intersectable.GeoPoint;
 import geometries.Plane;
 import primitives.*;
 import scene.Scene;
-
 import java.util.List;
-
 import java.util.ArrayList;
-
 import static primitives.Util.alignZero;
 
 public class Render {
@@ -23,11 +17,12 @@ public class Render {
     private static final double MIN_CALC_COLOR_K = 0.001;
     private double _superSampleDensity = 0d;
     private double _softShadowRadius = 0d;
-    private int numOfSuperSamplingRays = 50;
+    private int numOfSuperSamplingRays = 80;
     private int numOfSoftShadowRays = 50;
+    private int _adaptiveSuperSamplingLevel = 0;
     private int _threads = 1;
     private final int SPARE_THREADS = 2; // Spare threads if trying to use all the cores
-    private boolean _print = false; // printing progress percentage
+    private boolean _print = true; // printing progress percentage
 
 
     /**
@@ -118,7 +113,6 @@ public class Render {
         }
     }
 
-
 /**
  * A constant for moving rays beginning size for shading, transparency and reflection rays.
  */
@@ -151,6 +145,14 @@ public class Render {
     }
 
     /**
+     * setter
+     * @param _adaptiveSuperSamplingLevel
+     */
+    public void set_adaptiveSuperSamplingLevel(int _adaptiveSuperSamplingLevel) {
+        this._adaptiveSuperSamplingLevel = _adaptiveSuperSamplingLevel;
+    }
+
+    /**
      * Set multithreading <br>
      * - if the parameter is 0 - number of coress less SPARE (2) is taken
      * @param threads number of threads
@@ -173,44 +175,160 @@ public class Render {
     public Render setDebugPrint() { _print = true; return this; }
 
     /**
-     * Fill the buffer according to the geometries that are in the scene.
-     * This function creates the buffer of pixels
+     * Print the percentages
      */
-    public void renderImage() {
-        Camera camera = _scene.getCamera();
-        Intersectable geometries = _scene.getGeometries();
-        java.awt.Color background = _scene.getBackground().getColor();
-        double distance = _scene.getDistance();
-        int nX = _imageWriter.getNx();
-        int nY = _imageWriter.getNy();
-        int width = (int) _imageWriter.getWidth();
-        int height = (int) _imageWriter.getHeight();
-
-        Ray ray;
-        if(_superSampleDensity==0d) {
-            // for each point (i,j) in the view plane
-            // i is pixel row number and j is pixel in the row number
-            for (int i = 0; i < nY; i++) {
-                for (int j = 0; j < nX; j++) {
-                    ray = camera.constructRayThroughPixel(nX, nY, j, i, distance, width, height);
-                    List<GeoPoint> intersectionPoints = geometries.findIntersections(ray);
-                    if (intersectionPoints == null)
-                        _imageWriter.writePixel(j, i, background);
-                    else {
-                        GeoPoint closestPoint = getClosestPoint(intersectionPoints);
-                        _imageWriter.writePixel(j, i, closestPoint == null ? _scene.getBackground().getColor() : calcColor(closestPoint, ray).getColor());
-                    }
-                }
-            }
-        }
-        else //this is the super sampling
-        {
-            superSampling(camera, geometries, background, distance, nX, nY, width, height);
+     synchronized void printMessage(String msg) {
+        synchronized (System.out) {
+            System.out.println(msg);
         }
     }
 
     /**
-     * this function do the super sampling
+     * produce the picture
+     */
+    public void renderImage() {
+        Camera camera = _scene.getCamera();
+        Intersectable geometries = _scene.getGeometries();
+        double distance = _scene.getDistance();
+        int Nx = _imageWriter.getNx();
+        int Ny = _imageWriter.getNy();
+        double width = _imageWriter.getWidth();
+        double height = _imageWriter.getHeight();
+        Color background = _scene.getBackground();
+        final Pixel thePixel = new Pixel(Ny, Nx);
+        Thread[] threads = new Thread[_threads];
+        for (int i = _threads - 1; i >= 0; --i) {
+            threads[i] = new Thread(() -> {
+                Pixel pixel = new Pixel();
+                Color resultingColor;
+                while (thePixel.nextPixel(pixel)) {
+                    if (_superSampleDensity == 0d && _adaptiveSuperSamplingLevel == 0) { //without supersampling
+                        resultingColor =  getPixelRayColor(camera, geometries, background, distance, Nx, Ny, width, height, pixel.row, pixel.col);
+                    } else {
+                        if (_adaptiveSuperSamplingLevel == 0)// without adaptive supersampling
+                            resultingColor = getPixelRayColorSuperSampling(camera, geometries, background, distance, Nx, Ny, width, height, pixel.row, pixel.col);
+                        else {
+                            resultingColor = getPixelRayColorAdaptiveSuperSampling(camera, background, distance, Nx, Ny, width, height, pixel.row, pixel.col);
+                        }
+                    }
+                    _imageWriter.writePixel(pixel.col, pixel.row, resultingColor.getColor());
+                }
+            });
+        }
+        // Start threads
+        for (Thread thread : threads) thread.start();
+        // Wait for all threads to finish
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (Exception e) {
+            }
+        }
+        if (_print) {
+            printMessage("100%\n");
+        }
+    }
+
+    /**
+     * adaptive supersampling
+     * @param camera
+     * @param background
+     * @param distance
+     * @param nX
+     * @param nY
+     * @param width
+     * @param height
+     * @param i
+     * @param j
+     * @return the average color of the adaptive
+     */
+    private Color getPixelRayColorAdaptiveSuperSampling(Camera camera, Color background, double distance, int nX, int nY, double width, double height, int i, int j) {
+        double rUp = _imageWriter.getHeight() / _imageWriter.getNy(); //the height of the pixel
+        double rRight = _imageWriter.getWidth() / _imageWriter.getNx(); //the width of the pixel
+        Point3D pij = camera.findAPixel(nX, nY, j, i, distance, width, height); ////the center point of the pixel
+        Color pixelColor = getPixelAdaptiveRayColor(camera, background, pij, rUp, rRight, _adaptiveSuperSamplingLevel);//recursive function
+        return pixelColor;
+    }
+
+    /**
+     * recursive adaptive supersampling
+     * @param camera
+     * @param background
+     * @param pij
+     * @param rUp
+     * @param rRight
+     * @param level
+     * @return average color of
+     */
+    private Color getPixelAdaptiveRayColor(Camera camera, Color background, Point3D pij, double rUp, double rRight, int level) {
+        Ray ray = new Ray(camera.getP0(), pij.subtract(camera.getP0()).normalize()); //the main ray
+        Color pixelColor = Color.BLACK; //set default color
+        Vector vUp = camera.getvUp();
+        Vector vRight = camera.getvRight();
+        List<Ray> rays = Ray.construct4Rays(ray, pij, rUp, rRight, camera.getvUp(), camera.getvRight()); //..construct the rays at the corners/
+        GeoPoint closestPoint;
+        Color centerColor;
+        Color LTcolor;
+        Color RTcolor;
+        Color LBcolor;
+        Color RBcolor;
+
+        closestPoint = findClosestIntersection(ray);
+        if(closestPoint == null)
+            centerColor = background;
+        else
+            centerColor = calcColor(closestPoint, ray);
+        if(level == 1)
+            return centerColor;
+
+        //top left
+        closestPoint = findClosestIntersection(rays.get(0));
+        if(closestPoint == null)
+            LTcolor = background;
+        else
+            LTcolor = calcColor(closestPoint, rays.get(0));
+        if (!LTcolor.equals(centerColor)) {
+            Point3D pXY = pij.add(vUp.scale(rUp / 2d).add(vRight.scale(rRight / -2d)));
+            LTcolor = getPixelAdaptiveRayColor(camera, background, pXY, rUp / 2d, rRight / 2d, level - 1);
+        }
+
+        /*we seperate the corners because each one is calculated differently*/
+        //top right
+        closestPoint = findClosestIntersection(rays.get(1));
+        if(closestPoint == null)
+            RTcolor = background;
+        else
+            RTcolor = calcColor(closestPoint, rays.get(1));
+        if (!RTcolor.equals(centerColor)) {
+            Point3D pXY = pij.add(vUp.scale(rUp / 2d).add(vRight.scale(rRight / 2d)));
+            RTcolor = getPixelAdaptiveRayColor(camera, background, pXY, rUp / 2d, rRight / 2d, level - 1);
+        }
+        //bottom left
+        closestPoint = findClosestIntersection(rays.get(2));
+        if(closestPoint == null)
+            LBcolor = background;
+        else
+            LBcolor = calcColor(closestPoint, rays.get(2));
+        if (!LBcolor.equals(centerColor)) {
+            Point3D pXY = pij.add(vUp.scale(rUp / -2d).add(vRight.scale(rRight / -2d)));
+            LBcolor = getPixelAdaptiveRayColor(camera, background, pXY, rUp / 2d, rRight / 2d, level - 1);
+        }
+        //bottom right
+        closestPoint = findClosestIntersection(rays.get(3));
+        if(closestPoint == null)
+            RBcolor = background;
+        else
+            RBcolor = calcColor(closestPoint, rays.get(3));
+        if (!RBcolor.equals(centerColor)) {
+            Point3D pXY = pij.add(vUp.scale(rUp / -2d).add(vRight.scale(rRight / 2d)));
+            RBcolor = getPixelAdaptiveRayColor(camera, background, pXY, rUp / 2d, rRight / 2d, level - 1);
+        }
+        pixelColor = pixelColor.add(centerColor, LTcolor, RTcolor, LBcolor, RBcolor).reduce(5);
+        return pixelColor;
+    }
+
+    /**
+     * supersampling
      * @param camera
      * @param geometries
      * @param background
@@ -219,79 +337,59 @@ public class Render {
      * @param nY
      * @param width
      * @param height
+     * @param i
+     * @param j
+     * @return the average color
      */
-    private void superSampling(Camera camera, Intersectable geometries, java.awt.Color background, double distance, int nX, int nY, int width, int height) {
-        final Pixel thePixel = new Pixel(nY, nX);
-
-        // Generate threads
-        Thread[] threads = new Thread[_threads];
+    private Color getPixelRayColorSuperSampling(Camera camera, Intersectable geometries, Color background, double distance, int nX, int nY, double width, double height, int i, int j) {
         double radius = ((_imageWriter.getWidth() / _imageWriter.getNx() + _imageWriter.getHeight() / _imageWriter.getNy()) / 2d) * _superSampleDensity;
-        for (int i = _threads - 1; i >= 0; --i) {
-            threads[i] = new Thread(() -> {
-                Pixel pixel = new Pixel();
-                while (thePixel.nextPixel(pixel)) {
-                    Ray ray = camera.constructRayThroughPixel(nX, nY, pixel.col, pixel.row, distance, width, height);
-                    List<GeoPoint> intersectionPoints = geometries.findIntersections(ray);
-                    GeoPoint closestPoint = getClosestPoint(intersectionPoints);
-                    if (intersectionPoints == null)
-                        _imageWriter.writePixel(pixel.col, pixel.row, background);
-                    else {
-                        Point3D pij = camera.findAPixel(nX, nY, pixel.col, pixel.row, distance, width, height);
-                        List<Ray> rays = Ray.constructRayBeam(ray, pij, radius, numOfSuperSamplingRays, camera.getvUp(), camera.getvRight());
-                        Color avgColor = Color.BLACK;
-                        for (Ray r : rays) {
-                            closestPoint = findClosestIntersection(r);
-                            if (closestPoint == null)
-                                avgColor = avgColor.add(new Color(background));
-                            else
-                                avgColor = avgColor.add(calcColor(closestPoint, r));
-                        }
-                        avgColor = avgColor.scale(1d / rays.size());
-                        _imageWriter.writePixel(pixel.col, pixel.row, avgColor.getColor());
-                    }
-                }
-            });
+        Ray ray = camera.constructRayThroughPixel(nX, nY, j, i, distance, width, height); //the main ray
+        GeoPoint closestPoint;
+        Color avgColor = Color.BLACK;
+        Point3D pij = camera.findAPixel(nX, nY, j, i, distance, width, height); //the center of the pixel
+        List<Ray> rays = Ray.constructRayBeam(ray, pij, radius, numOfSuperSamplingRays, camera.getvUp(), camera.getvRight());
+        for (Ray r : rays) { //for each ray check the color
+            closestPoint = findClosestIntersection(r);
+            if (closestPoint == null)
+                avgColor = avgColor.add(new Color(background));
+            else
+                avgColor = avgColor.add(calcColor(closestPoint, r));
         }
-
-        // Start threads
-        for (Thread thread : threads) thread.start();
-
-        // Wait for all threads to finish
-        for (Thread thread : threads)
-            try {
-                thread.join();
-            } catch (Exception e) {
-            }
-        if (_print) System.out.printf("\r100%%\n");
-
-        /*
-        Ray ray;
-        double radius =((_imageWriter.getWidth()/_imageWriter.getNx() +_imageWriter.getHeight()/_imageWriter.getNy())/2d)*_superSampleDensity;
-        for (int i = 0; i < nY; i++) {
-            for (int j = 0; j < nX; j++) {
-                ray = camera.constructRayThroughPixel(nX, nY, j, i, distance, width, height);
-                List<GeoPoint> intersectionPoints = geometries.findIntersections(ray);
-                GeoPoint closestPoint = getClosestPoint(intersectionPoints);
-                if (intersectionPoints == null)
-                    _imageWriter.writePixel(j, i, background);
-                else {
-                    Point3D pij = camera.findAPixel(nX, nY, j, i, distance, width, height);
-                    List<Ray> rays = Ray.constructRayBeam(ray, pij, radius, numOfSuperSamplingRays, camera.getvUp(), camera.getvRight());
-                    Color avgColor = Color.BLACK;
-                    for (Ray r : rays) {
-                        closestPoint = findClosestIntersection(r);
-                        if (closestPoint == null)
-                            avgColor = avgColor.add(new Color(background));
-                        else
-                            avgColor = avgColor.add(calcColor(closestPoint, r));
-                    }
-                    avgColor = avgColor.scale(1d / rays.size());
-                    _imageWriter.writePixel(j, i, avgColor.getColor());
-                }
-            }
-        }
+        avgColor = avgColor.scale(1d / rays.size());
+        return avgColor;
     }
-    */
+
+    /**
+     *this function returns the color of a pixel
+     * @param camera
+     * @param geometries
+     * @param background
+     * @param distance
+     * @param nX
+     * @param nY
+     * @param width
+     * @param height
+     * @param i
+     * @param j
+     * @return  return the color of pixel without supersampling
+     */
+    private Color getPixelRayColor(Camera camera, Intersectable geometries, Color background, double distance, int nX, int nY, double width, double height, int i, int j) {
+        Ray ray;
+        Color pixelColor;
+        ray = camera.constructRayThroughPixel(nX, nY, j, i, distance, width, height);
+        List<GeoPoint> intersectionPoints = geometries.findIntersections(ray);
+        if (intersectionPoints == null)
+            pixelColor = background;
+         else {
+            GeoPoint closestPoint = getClosestPoint(intersectionPoints);
+            if (closestPoint==null){
+                pixelColor= background;
+            }
+            else{
+                pixelColor=calcColor(closestPoint,ray);
+            }
+       }
+        return pixelColor;
     }
 
     /**
@@ -305,7 +403,7 @@ public class Render {
     }
 
     /**
-     *
+     *this function calculates the color according to phong model
      * Calculate the color intensity in the point
      *recursive function
      * @param geoPoint the point to calculate the color

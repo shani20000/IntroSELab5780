@@ -1,9 +1,7 @@
 package primitives;
-import java.awt.*;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
-
-import static primitives.Util.alignZero;
-import static primitives.Util.isZero;
 
 /**
  * Class Point3D is the class representing a 3D point

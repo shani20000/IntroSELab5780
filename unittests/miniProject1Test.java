@@ -15,7 +15,6 @@ import scene.Scene;
 import java.awt.*;
 
 public class miniProject1Test {
-    @Test
     /**
      * Produce a picture of without any improvements
      */
@@ -30,22 +29,32 @@ public class miniProject1Test {
         scene.addGeometries(new Sphere(new primitives.Color(Color.RED), new Material(0.5, 0.5, 30, 0.7, 0),
                         10, new Point3D(0, 0, 0)),
                 new Sphere(new primitives.Color(new Color(0, 0, 0)), new Material(0.5, 0.5, 30, 0, 0),
-                        15, new Point3D(-20, -5, 100)),
+                        15, new Point3D(-20, -5, 20)),
                 new Sphere(new primitives.Color(new Color(59, 189, 57)), new Material(0.5, 0.5, 30),
-                        20, new Point3D(-30, -10, 140)),
+                        20, new Point3D(-30, -10, 60)),
                 new Sphere(new primitives.Color(Color.blue), new Material(0.5, 0.5, 30, 0.6, 0),
-                        30, new Point3D(15, -20, 150)),
-               new Plane(new primitives.Color(Color.BLACK), new Material(0.5, 0.5, 30, 0, 0.5),
-                       new Point3D(-20, 10, 100), new Point3D(-30, 10, 140), new Point3D(15, 10, 150)),
+                        30, new Point3D(15, -20, 70)),
+                new Plane(new primitives.Color(Color.BLACK), new Material(0.5, 0.5, 30, 0, 0.5),
+                        new Point3D(-20, 10, 100), new Point3D(-30, 10, 140), new Point3D(15, 10, 150)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
                         new Point3D(20, -30, 10), new Point3D(40, -30, -30),
                         new Point3D(80, -30, -10), new Point3D(60, -30, 30)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
-                        new Point3D(20, -30, 10),  new Point3D(40, -30, -30),
+                        new Point3D(20, -30, 10), new Point3D(40, -30, -30),
                         new Point3D(40, 10, -30), new Point3D(20, 10, 10)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
                         new Point3D(80, -30, -10), new Point3D(40, -30, -30),
-                        new Point3D(40, 10, -30), new Point3D(80, 10, -10))
+                        new Point3D(40, 10, -30), new Point3D(80, 10, -10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(20, -30, 10), new Point3D(60, -30, 30),
+                        new Point3D(60, 10, 30), new Point3D(20, 10, 10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(40, 10, -30), new Point3D(80, 10, -10),
+                        new Point3D(60, 10, 30), new Point3D(20, 10, 10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(60, -30, 30),
+                        new Point3D(80, -30, -10), new Point3D(80, 10, -10),
+                        new Point3D(60, 10, 30))
         );
 
         scene.addLights(new SpotLight(new primitives.Color(Color.WHITE),
@@ -64,7 +73,6 @@ public class miniProject1Test {
         render.writeToImage();
     }
 
-    @Test
     /**
      * Produce a picture with super sampling improvement
      */
@@ -79,22 +87,32 @@ public class miniProject1Test {
         scene.addGeometries(new Sphere(new primitives.Color(Color.RED), new Material(0.5, 0.5, 30, 0.7, 0),
                         10, new Point3D(0, 0, 0)),
                 new Sphere(new primitives.Color(new Color(0, 0, 0)), new Material(0.5, 0.5, 30, 0, 0),
-                        15, new Point3D(-20, -5, 100)),
+                        15, new Point3D(-20, -5, 20)),
                 new Sphere(new primitives.Color(new Color(59, 189, 57)), new Material(0.5, 0.5, 30),
-                        20, new Point3D(-30, -10, 140)),
+                        20, new Point3D(-30, -10, 60)),
                 new Sphere(new primitives.Color(Color.blue), new Material(0.5, 0.5, 30, 0.6, 0),
-                        30, new Point3D(15, -20, 150)),
+                        30, new Point3D(15, -20, 70)),
                 new Plane(new primitives.Color(Color.BLACK), new Material(0.5, 0.5, 30, 0, 0.5),
                         new Point3D(-20, 10, 100), new Point3D(-30, 10, 140), new Point3D(15, 10, 150)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
                         new Point3D(20, -30, 10), new Point3D(40, -30, -30),
                         new Point3D(80, -30, -10), new Point3D(60, -30, 30)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
-                        new Point3D(20, -30, 10),  new Point3D(40, -30, -30),
+                        new Point3D(20, -30, 10), new Point3D(40, -30, -30),
                         new Point3D(40, 10, -30), new Point3D(20, 10, 10)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
                         new Point3D(80, -30, -10), new Point3D(40, -30, -30),
-                        new Point3D(40, 10, -30), new Point3D(80, 10, -10))
+                        new Point3D(40, 10, -30), new Point3D(80, 10, -10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(20, -30, 10), new Point3D(60, -30, 30),
+                        new Point3D(60, 10, 30), new Point3D(20, 10, 10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(40, 10, -30), new Point3D(80, 10, -10),
+                        new Point3D(60, 10, 30), new Point3D(20, 10, 10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(60, -30, 30),
+                        new Point3D(80, -30, -10), new Point3D(80, 10, -10),
+                        new Point3D(60, 10, 30))
         );
 
         scene.addLights(new SpotLight(new primitives.Color(Color.WHITE),
@@ -112,7 +130,6 @@ public class miniProject1Test {
         render.writeToImage();
 }
 
-    @Test
     /**
      * Produce a picture with soft shadows improvement
      */
@@ -127,22 +144,32 @@ public class miniProject1Test {
         scene.addGeometries(new Sphere(new primitives.Color(Color.RED), new Material(0.5, 0.5, 30, 0.7, 0),
                         10, new Point3D(0, 0, 0)),
                 new Sphere(new primitives.Color(new Color(0, 0, 0)), new Material(0.5, 0.5, 30, 0, 0),
-                        15, new Point3D(-20, -5, 100)),
+                        15, new Point3D(-20, -5, 20)),
                 new Sphere(new primitives.Color(new Color(59, 189, 57)), new Material(0.5, 0.5, 30),
-                        20, new Point3D(-30, -10, 140)),
+                        20, new Point3D(-30, -10, 60)),
                 new Sphere(new primitives.Color(Color.blue), new Material(0.5, 0.5, 30, 0.6, 0),
-                        30, new Point3D(15, -20, 150)),
+                        30, new Point3D(15, -20, 70)),
                 new Plane(new primitives.Color(Color.BLACK), new Material(0.5, 0.5, 30, 0, 0.5),
                         new Point3D(-20, 10, 100), new Point3D(-30, 10, 140), new Point3D(15, 10, 150)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
                         new Point3D(20, -30, 10), new Point3D(40, -30, -30),
                         new Point3D(80, -30, -10), new Point3D(60, -30, 30)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
-                        new Point3D(20, -30, 10),  new Point3D(40, -30, -30),
+                        new Point3D(20, -30, 10), new Point3D(40, -30, -30),
                         new Point3D(40, 10, -30), new Point3D(20, 10, 10)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
                         new Point3D(80, -30, -10), new Point3D(40, -30, -30),
-                        new Point3D(40, 10, -30), new Point3D(80, 10, -10))
+                        new Point3D(40, 10, -30), new Point3D(80, 10, -10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(20, -30, 10), new Point3D(60, -30, 30),
+                        new Point3D(60, 10, 30), new Point3D(20, 10, 10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(40, 10, -30), new Point3D(80, 10, -10),
+                        new Point3D(60, 10, 30), new Point3D(20, 10, 10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(60, -30, 30),
+                        new Point3D(80, -30, -10), new Point3D(80, 10, -10),
+                        new Point3D(60, 10, 30))
         );
 
         scene.addLights(new SpotLight(new primitives.Color(Color.WHITE),
@@ -161,7 +188,6 @@ public class miniProject1Test {
         render.writeToImage();
     }
 
-    @Test
     /**
      * Produce a picture with super sampling and soft shadows improvements
      */
@@ -176,22 +202,32 @@ public class miniProject1Test {
         scene.addGeometries(new Sphere(new primitives.Color(Color.RED), new Material(0.5, 0.5, 30, 0.7, 0),
                         10, new Point3D(0, 0, 0)),
                 new Sphere(new primitives.Color(new Color(0, 0, 0)), new Material(0.5, 0.5, 30, 0, 0),
-                        15, new Point3D(-20, -5, 100)),
+                        15, new Point3D(-20, -5, 20)),
                 new Sphere(new primitives.Color(new Color(59, 189, 57)), new Material(0.5, 0.5, 30),
-                        20, new Point3D(-30, -10, 140)),
+                        20, new Point3D(-30, -10, 60)),
                 new Sphere(new primitives.Color(Color.blue), new Material(0.5, 0.5, 30, 0.6, 0),
-                        30, new Point3D(15, -20, 150)),
+                        30, new Point3D(15, -20, 70)),
                 new Plane(new primitives.Color(Color.BLACK), new Material(0.5, 0.5, 30, 0, 0.5),
                         new Point3D(-20, 10, 100), new Point3D(-30, 10, 140), new Point3D(15, 10, 150)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
                         new Point3D(20, -30, 10), new Point3D(40, -30, -30),
                         new Point3D(80, -30, -10), new Point3D(60, -30, 30)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
-                        new Point3D(20, -30, 10),  new Point3D(40, -30, -30),
+                        new Point3D(20, -30, 10), new Point3D(40, -30, -30),
                         new Point3D(40, 10, -30), new Point3D(20, 10, 10)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
                         new Point3D(80, -30, -10), new Point3D(40, -30, -30),
-                        new Point3D(40, 10, -30), new Point3D(80, 10, -10))
+                        new Point3D(40, 10, -30), new Point3D(80, 10, -10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(20, -30, 10), new Point3D(60, -30, 30),
+                        new Point3D(60, 10, 30), new Point3D(20, 10, 10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(40, 10, -30), new Point3D(80, 10, -10),
+                        new Point3D(60, 10, 30), new Point3D(20, 10, 10)),
+                new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
+                        new Point3D(60, -30, 30),
+                        new Point3D(80, -30, -10), new Point3D(80, 10, -10),
+                        new Point3D(60, 10, 30))
         );
 
         scene.addLights(new SpotLight(new primitives.Color(Color.WHITE),
@@ -210,7 +246,6 @@ public class miniProject1Test {
         render.writeToImage();
     }
 
-    @Test
     /**
      * Produce a picture of a sphere and triangle with point light with soft shadows
      */
@@ -238,7 +273,6 @@ public class miniProject1Test {
         render.writeToImage();
     }
 
-    @Test
     /**
      * Produce a picture of a two triangles lighted by a spot light with a partially transparent Sphere
      *  producing partial shadow with super sampling
@@ -269,7 +303,6 @@ public class miniProject1Test {
         render.writeToImage();
     }
 
-    @Test
     /**
      * Produce a picture of a two triangles lighted by a spot light with a partially transparent Sphere
      *  producing partial shadow with super sampling

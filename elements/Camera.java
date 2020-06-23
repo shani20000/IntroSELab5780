@@ -114,6 +114,13 @@ public class Camera {
         return pij;
     }
 
+    public List<Ray> constructFiveRaysThroughPixel(int nX, int nY, int j, int i, double distance, double width, double height, double tx, double ty, double bx, double by) {
+        List<Ray> result = new LinkedList<>();
+        //add first center point
+        //....
+        return result;
+    }
+
     /**
      *
      * @param mainRay

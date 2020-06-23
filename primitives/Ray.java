@@ -133,5 +133,36 @@ public class Ray {
      }
      return rays;
      }
+
+    /**
+     *This function creates rays for adaptive superSampling
+     * @param mainRay
+     * @param point
+     * @param rUp
+     * @param rRight
+     * @param vUp
+     * @param vRight
+     * @return list of 4 rays: top left, top right, bottom left, bottom right
+     */
+    public static List<Ray> construct4Rays(Ray mainRay, Point3D point, double rUp, double rRight, Vector vUp, Vector vRight) {
+        if (isZero(mainRay.getPoint().distance(point))) {
+            throw new IllegalArgumentException("Distance can't be 0");
+        }
+        Point3D rayPoint = mainRay.getPoint();
+        LinkedList<Ray> rays = new LinkedList<>();
+        Point3D tL = point; //top left
+        tL = tL.add(vUp.scale(rUp).add(vRight.scale(rRight*(-1d))));
+        rays.add(new Ray(rayPoint, tL.subtract(rayPoint).normalize()));
+        Point3D tR = point; //top right
+        tR = tR.add(vUp.scale(rUp).add(vRight.scale(rRight)));
+        rays.add(new Ray(rayPoint, tR.subtract(rayPoint).normalize()));
+        Point3D bL = point; //bottom left
+        bL = bL.add(vUp.scale(rUp*(-1d)).add(vRight.scale(rRight*(-1d))));
+        rays.add(new Ray(rayPoint, bL.subtract(rayPoint).normalize()));
+        Point3D bR = point; //bottom right
+        bR = bR.add(vUp.scale(rUp*(-1d)).add(vRight.scale(rRight)));
+        rays.add(new Ray(rayPoint, bR.subtract(rayPoint).normalize()));
+        return rays;
+    }
 }
 
