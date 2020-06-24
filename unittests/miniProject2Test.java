@@ -143,7 +143,7 @@ public class miniProject2Test {
     @org.junit.Test
     public void mp2MoveCamera() {
         Scene scene = new Scene("Test scene");
-        scene.setCamera(new Camera(new Point3D(0, -1000, 0), new Vector(0, 1, 0), new Vector(-1, 0, 0)));
+        scene.setCamera(new Camera(new Point3D(0, -1000, 0), new Vector(0, 1, 0), new Vector(0, 0, 1)));
         scene.setDistance(1000);
         scene.setBackground(new primitives.Color(Color.BLACK));
         scene.setAmbientLight(new AmbientLight(primitives.Color.BLACK, 0));
@@ -156,7 +156,7 @@ public class miniProject2Test {
                         20, new Point3D(-30, -10, 60)),
                 new Sphere(new primitives.Color(Color.blue), new Material(0.5, 0.5, 30, 0.6, 0),
                         30, new Point3D(15, -20, 70)),
-                new Plane(new primitives.Color(Color.BLACK), new Material(0.5, 0.5, 30, 0, 0.5),
+                new Plane(new primitives.Color(Color.BLACK), new Material(0.5, 0.5, 30, 0, 0),
                         new Point3D(-20, 10, 100), new Point3D(-30, 10, 140), new Point3D(15, 10, 150)),
                 new Polygon(new primitives.Color(new Color(250, 0, 220)), new Material(0.5, 0.5, 30),
                         new Point3D(20, -30, 10), new Point3D(40, -30, -30),
@@ -187,12 +187,12 @@ public class miniProject2Test {
 
         );
 
-        ImageWriter imageWriter = new ImageWriter("mp2 move camera 3", 200, 200, 400, 400);
+        ImageWriter imageWriter = new ImageWriter("mp2 move camera 7", 200, 200, 400, 400);
         Render render = new Render(imageWriter, scene);
-        render.set_softShadowRadius(15);
-        render.set_superSampleDensity(1);
-        //render.setMultithreading(4);
-        //render.set_adaptiveSuperSamplingLevel(3);
+        //render.set_softShadowRadius(15);
+        //render.set_superSampleDensity(1);
+        render.setMultithreading(4);
+        render.set_adaptiveSuperSamplingLevel(3);
         render.renderImage();
         render.writeToImage();
     }
