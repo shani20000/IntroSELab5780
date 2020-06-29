@@ -73,6 +73,11 @@ private Point3D _center;
                 '}';
     }
 
+    /**
+     *
+     * @param ray
+     * @return
+     */
     @Override
     public List<GeoPoint> findIntersections(Ray ray) {
         if(ray.getPoint().equals(_center))

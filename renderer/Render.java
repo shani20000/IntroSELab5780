@@ -13,14 +13,14 @@ import static primitives.Util.alignZero;
 public class Render {
     private final ImageWriter _imageWriter;
     private final Scene _scene;
-    private static final int MAX_CALC_COLOR_LEVEL = 10;
-    private static final double MIN_CALC_COLOR_K = 0.001;
-    private double _superSampleDensity = 0d;
-    private double _softShadowRadius = 0d;
-    private int numOfSuperSamplingRays = 80;
-    private int numOfSoftShadowRays = 50;
-    private int _adaptiveSuperSamplingLevel = 0;
-    private int _threads = 1;
+    private static final int MAX_CALC_COLOR_LEVEL = 10; //The depth of the recursion of calc color
+    private static final double MIN_CALC_COLOR_K = 0.001; //For stopping the recursion of calc color for negligible result
+    private double _superSampleDensity = 0d; //super sampling density.
+    private double _softShadowRadius = 0d; //The radius of the light source (point).
+    private int numOfSuperSamplingRays = 80; //The default number of super sampling rays
+    private int numOfSoftShadowRays = 50; //The default number of soft shadow rays
+    private int _adaptiveSuperSamplingLevel = 0; //adaptive super sampling recursion level
+    private int _threads = 1; //The default number of threads
     private final int SPARE_THREADS = 2; // Spare threads if trying to use all the cores
     private boolean _print = true; // printing progress percentage
 
@@ -86,6 +86,8 @@ public class Render {
             ++row;
             if (row < _maxRows) {
                 col = 0;
+                target.row = this.row;
+                target.col = this.col;
                 if (_counter == _nextCounter) {
                     ++_percents;
                     _nextCounter = _pixels * (_percents + 1) / 100;
@@ -129,6 +131,7 @@ public class Render {
 
     /**
      * setter
+     * set the density of supersampling. if default there is no supersampling.
      * @param _superSampleDensity
      */
     public void set_superSampleDensity(double _superSampleDensity) {
@@ -138,6 +141,7 @@ public class Render {
 
     /**
      * setter
+     * set the radius of soft shadow. if default there is no soft shadow.
      * @param _softShadowRadius
      */
     public void set_softShadowRadius(double _softShadowRadius) {
@@ -146,6 +150,23 @@ public class Render {
 
     /**
      * setter
+     * @param numOfSuperSamplingRays
+     */
+    public void setNumOfSuperSamplingRays(int numOfSuperSamplingRays) {
+        this.numOfSuperSamplingRays = numOfSuperSamplingRays;
+    }
+
+    /**
+     * setter
+     * @param numOfSoftShadowRays
+     */
+    public void setNumOfSoftShadowRays(int numOfSoftShadowRays) {
+        this.numOfSoftShadowRays = numOfSoftShadowRays;
+    }
+
+    /**
+     * setter
+     * set the level of adaptive supersampling. if default there is no adaptive supersampling.
      * @param _adaptiveSuperSamplingLevel
      */
     public void set_adaptiveSuperSamplingLevel(int _adaptiveSuperSamplingLevel) {
@@ -190,10 +211,10 @@ public class Render {
         Camera camera = _scene.getCamera();
         Intersectable geometries = _scene.getGeometries();
         double distance = _scene.getDistance();
-        int Nx = _imageWriter.getNx();
-        int Ny = _imageWriter.getNy();
-        double width = _imageWriter.getWidth();
-        double height = _imageWriter.getHeight();
+        int Nx = _imageWriter.getNx();//the number of pixels to the width
+        int Ny = _imageWriter.getNy();//the number of pixels to the height
+        double width = _imageWriter.getWidth();//the width of the scene
+        double height = _imageWriter.getHeight();//the height of the scene
         Color background = _scene.getBackground();
         final Pixel thePixel = new Pixel(Ny, Nx);
         Thread[] threads = new Thread[_threads];
@@ -205,9 +226,9 @@ public class Render {
                     if (_superSampleDensity == 0d && _adaptiveSuperSamplingLevel == 0) { //without supersampling
                         resultingColor =  getPixelRayColor(camera, geometries, background, distance, Nx, Ny, width, height, pixel.row, pixel.col);
                     } else {
-                        if (_adaptiveSuperSamplingLevel == 0)// without adaptive supersampling
+                        if (_adaptiveSuperSamplingLevel == 0)// with supersampling
                             resultingColor = getPixelRayColorSuperSampling(camera, geometries, background, distance, Nx, Ny, width, height, pixel.row, pixel.col);
-                        else {
+                        else { // with adaptive supersampling
                             resultingColor = getPixelRayColorAdaptiveSuperSampling(camera, background, distance, Nx, Ny, width, height, pixel.row, pixel.col);
                         }
                     }
@@ -233,7 +254,7 @@ public class Render {
      * adaptive supersampling
      * @param camera
      * @param background
-     * @param distance
+     * @param distance- the distance of the camera
      * @param nX
      * @param nY
      * @param width
@@ -252,18 +273,22 @@ public class Render {
 
     /**
      * recursive adaptive supersampling
+     * Initially we will sample 5 rays - mid pixel and edges.
+     * If the color between the edge and the middle of the pixel is equal, no further sampling is required.
+     * If the color is different - we will continue to sample recursively until we reach the final level or reach the same color.
+     * The color is calculated according to the average of colors obtained using the recursion.
      * @param camera
      * @param background
-     * @param pij
-     * @param rUp
-     * @param rRight
+     * @param pij the center of the sample
+     * @param rUp the radius of the samples add to the vector up
+     * @param rRight the radius of the samples add to the vector right
      * @param level
-     * @return average color of
+     * @return average color of  pixel
      */
     private Color getPixelAdaptiveRayColor(Camera camera, Color background, Point3D pij, double rUp, double rRight, int level) {
         Ray ray = new Ray(camera.getP0(), pij.subtract(camera.getP0()).normalize()); //the main ray
         Color pixelColor = Color.BLACK; //set default color
-        Vector vUp = camera.getvUp();
+        Vector vUp = camera.getvUp();//
         Vector vRight = camera.getvRight();
         List<Ray> rays = Ray.construct4Rays(ray, pij, rUp, rRight, camera.getvUp(), camera.getvRight()); //..construct the rays at the corners/
         GeoPoint closestPoint;
@@ -342,7 +367,7 @@ public class Render {
      * @return the average color
      */
     private Color getPixelRayColorSuperSampling(Camera camera, Intersectable geometries, Color background, double distance, int nX, int nY, double width, double height, int i, int j) {
-        double radius = ((_imageWriter.getWidth() / _imageWriter.getNx() + _imageWriter.getHeight() / _imageWriter.getNy()) / 2d) * _superSampleDensity;
+        double radius = ((_imageWriter.getWidth() / _imageWriter.getNx() + _imageWriter.getHeight() / _imageWriter.getNy()) / 2d) * _superSampleDensity;//the average between the height and the width mults the density
         Ray ray = camera.constructRayThroughPixel(nX, nY, j, i, distance, width, height); //the main ray
         GeoPoint closestPoint;
         Color avgColor = Color.BLACK;
@@ -351,7 +376,7 @@ public class Render {
         for (Ray r : rays) { //for each ray check the color
             closestPoint = findClosestIntersection(r);
             if (closestPoint == null)
-                avgColor = avgColor.add(new Color(background));
+                avgColor = avgColor.add(background);
             else
                 avgColor = avgColor.add(calcColor(closestPoint, r));
         }
@@ -408,8 +433,8 @@ public class Render {
      *recursive function
      * @param geoPoint the point to calculate the color
      * @param inRay
-     * @param level
-     * @param k
+     * @param level the recursion level
+     * @param k the intensity of the color (0 to 1)
      * @return the color intensity
      */
     private Color calcColor(GeoPoint geoPoint, Ray inRay, int level, double k) {
@@ -418,16 +443,19 @@ public class Render {
         resultColor = emissionLight;
         List<LightSource> lights = _scene.get_lights();
         Material material = geoPoint.geometry.getMaterial();
-        Vector v = geoPoint.point.subtract(_scene.getCamera().getP0()).normalize();
-        Vector n = geoPoint.geometry.getNormal(geoPoint.point).normalize();
+        Vector v = geoPoint.point.subtract(_scene.getCamera().getP0()).normalize(); //the vector from the point to the camera
+        Vector n = geoPoint.geometry.getNormal(geoPoint.point).normalize(); //the normal to the geometry at the intersection point
         double nShininess = material.get_nShininess();
         double kd = material.get_kD();
         double ks = material.get_kS();
+        double kt = material.get_kT();
+        double kr = material.get_kR();
+        resultColor = resultColor.scale(1-kt); //reduce the material color according to the the transparency level of the geometry
         if (lights != null) {
-            for (LightSource lightSource : lights) {
-                Vector l = lightSource.getL(geoPoint.point).normalize();
-                if (n.dotProduct(l) * n.dotProduct(v) > 0) {
-                    double ktr = calcShadow(lightSource, l, n, geoPoint, _softShadowRadius);
+            for (LightSource lightSource : lights) { //foreach light source in the scene
+                Vector l = lightSource.getL(geoPoint.point).normalize(); //the vector from the light source
+                if (n.dotProduct(l) * n.dotProduct(v) > 0) { //check if the two vectors are in the same side of the geometry
+                    double ktr = calcShadow(lightSource, l, n, geoPoint, _softShadowRadius); //the shadow
                     if (ktr * k > MIN_CALC_COLOR_K) {
                         Color lightIntensity = lightSource.getIntensity(geoPoint.point).scale(ktr);
                         Color diffuse = calcDiffusive(kd, l, n, lightIntensity);
@@ -437,17 +465,15 @@ public class Render {
                 }
             }
         }
-        if (level == 1) return Color.BLACK;
-        double kr = geoPoint.geometry.getMaterial().get_kR();
-        double kKr = k * kr;
+        if (level == 1) return Color.BLACK; //end of the recursion
+        double kKr = k * kr; //reflection
         if (kKr > MIN_CALC_COLOR_K) {
             Ray reflectedRay = constructReflectedRay(inRay.getVector(), n, geoPoint);
             GeoPoint reflectedPoint = findClosestIntersection(reflectedRay);
             if (reflectedPoint != null)
                 resultColor = resultColor.add(calcColor(reflectedPoint, reflectedRay, level - 1, kKr).scale(kKr));
         }
-        double kt = geoPoint.geometry.getMaterial().get_kT();
-        double kKt = k * kt;
+        double kKt = k * kt; //transparency
         if (kKt > MIN_CALC_COLOR_K) {
             Ray refractedRay = constructRefractedRay(inRay.getVector(), n, geoPoint);
             GeoPoint refractedPoint = findClosestIntersection(refractedRay);
@@ -488,7 +514,7 @@ public class Render {
 
     /**
      * Find the closest point to p0 (the camera)
-     *
+     * The function goes over all intersection points and returns the point away from the camera is minimal
      * @param intersectionPoints the list of the intersection points
      * @return the closest point to p0
      */
@@ -566,7 +592,7 @@ public class Render {
 
 
     /**
-     * this function checks if a geometry is shaded
+     * this function calculates the shade level at the point
      * @param light the light source
      * @param l  the vector from the light source to the point
      * @param n  the normal of the geometry at the point
@@ -574,7 +600,6 @@ public class Render {
      * @return the shadow level (1 if the geometry is unshaded).
      */
     private double calcShadow(LightSource light, Vector l, Vector n, GeoPoint gp, double _softShadowDensity) {
-        double radius =(_imageWriter.getWidth()/_imageWriter.getNx() +_imageWriter.getHeight()/_imageWriter.getNy())/2d;
         Vector lightDirection = l.scale(-1); // from point to light source
         Ray lightRay = new Ray(gp.point, lightDirection, n);
         if (_softShadowDensity == 0d || light.getClass() == DirectionalLight.class){ //if there is no soft shadows or the light source is directional) {
@@ -593,13 +618,21 @@ public class Render {
             return ktr;
         }
         else {
-            return softShadow((PointLight) light, gp, _softShadowDensity, lightRay);
+            return softShadow((PointLight) light, gp, _softShadowDensity, lightRay); //soft shadow
         }
     }
 
-    private double softShadow(PointLight light, GeoPoint gp, double _softShadowDensity, Ray lightRay) {
+    /**
+     * this function calculates the shade level with soft shadow
+     * @param light the light source
+     * @param gp the point
+     * @param _softShadowRadius
+     * @param lightRay
+     * @return the shadow level (1 if the geometry is unshaded).
+     */
+    private double softShadow(PointLight light, GeoPoint gp, double _softShadowRadius, Ray lightRay) {
         List<Ray> rays;
-        rays = Ray.constructRayBeam(lightRay, light.get_position(), _softShadowDensity, numOfSoftShadowRays,
+        rays = Ray.constructRayBeam(lightRay, light.get_position(), _softShadowRadius, numOfSoftShadowRays,
                 _scene.getCamera().getvUp(),_scene.getCamera().getvRight());
         double sum = 0;
         for (Ray r : rays) {
@@ -609,22 +642,22 @@ public class Render {
             else {
                 double distance;
                 Plane lightPlane = new Plane(light.get_position(), lightRay.getVector());
-                double temp = 1.0;
+                double shadowLevel = 1.0; //the shadow level. 1 is unshaded.
                 for (GeoPoint interPoint : intersections) {
-                    Point3D lightPlaneIntersection = lightPlane.findIntersections(r).get(0).point;
+                    Point3D lightPlaneIntersection = lightPlane.findIntersections(r).get(0).point; //the intersection with the plane
                     distance = lightPlaneIntersection.distance(gp.point);
                     if (alignZero(interPoint.point.distance(gp.point) - distance) <= 0) {
-                        temp *= interPoint.geometry.getMaterial().get_kT();
-                        if (temp < MIN_CALC_COLOR_K) {
-                            temp = 0.0;
+                        shadowLevel *= interPoint.geometry.getMaterial().get_kT();
+                        if (shadowLevel < MIN_CALC_COLOR_K) {
+                            shadowLevel = 0.0;
                             break;
                         }
                     }
                 }
-                sum += temp;
+                sum += shadowLevel;
             }
         }
-        double ktr = sum / rays.size();
+        double ktr = sum / rays.size(); //calculate the average
         return ktr;
     }
 

@@ -113,43 +113,5 @@ public class Camera {
             pij = pij.add(vUp.scale(-yI));
         return pij;
     }
-
-    public List<Ray> constructFiveRaysThroughPixel(int nX, int nY, int j, int i, double distance, double width, double height, double tx, double ty, double bx, double by) {
-        List<Ray> result = new LinkedList<>();
-        //add first center point
-        //....
-        return result;
-    }
-
-    /**
-     *
-     * @param mainRay
-     * @param point
-     * @param delta
-     * @param num
-     * @return
-     */
-    /**
-    public List<Ray> constructSuperSamplingRaysThroughPixel(Ray mainRay, Point3D point, double delta, int num) {
-        if (isZero(mainRay.getPoint().distance(point))) {
-            throw new IllegalArgumentException("Distance can't be 0");
-        }
-        Random rnd = new Random();
-        double[] randomNumbers = rnd.doubles(num * 2, delta * (-1), delta).distinct().toArray();
-        Vector direction = mainRay.getVector();
-        Point3D rayPoint = mainRay.getPoint();
-        Vector v1 = new Vector(1, 0, 0);
-        Vector v2 = new Vector(0, 1, 0);
-        LinkedList<Ray> rays = new LinkedList<>();
-
-
-        for(int i=0; i < Math.min(num, randomNumbers.length-1); i++) {
-            Point3D pXY = point;
-            pXY = pXY.add(v1.scale(randomNumbers[i]).add(v2.scale(randomNumbers[i+1])));
-            rays.add(new Ray(rayPoint, pXY.subtract(rayPoint).normalize()));
-        }
-        return rays;
-    }
-     */
 }
 

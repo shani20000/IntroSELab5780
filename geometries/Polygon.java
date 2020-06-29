@@ -107,6 +107,11 @@ public class Polygon extends Geometry {
         return _plane.get_normal();
     }
 
+    /**
+     *
+     * @param ray
+     * @return
+     */
     @Override
     public List<GeoPoint> findIntersections(Ray ray) {
         Plane plane = new Plane(emission, material, this._vertices.get(0), this._vertices.get(1), this._vertices.get(2));

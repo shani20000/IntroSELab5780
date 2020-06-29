@@ -175,7 +175,7 @@ public class Color {
     }
 
     /**
-     * this function compares 2 colors, with a deviation of up to 0.1
+     * this function compares 2 colors, with a deviation of up to 1 total
      * @param o
      * @return
      */
@@ -184,9 +184,7 @@ public class Color {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Color color = (Color) o;
-        return Math.abs(color._r - _r) <= 0.1 &&
-                Math.abs(color._g - _g) <= 0.1 &&
-                Math.abs(color._b - _b) <= 0.1;
+        return Math.abs(color._r - _r) + Math.abs(color._g - _g) + Math.abs(color._b - _b) <= 1;
     }
 
     @Override
