@@ -136,7 +136,10 @@ public class Render {
      */
     public void set_superSampleDensity(double _superSampleDensity) {
         if (_superSampleDensity >= 0d)
-            this._superSampleDensity = _superSampleDensity;
+            if(_superSampleDensity > 1)
+                this._superSampleDensity = 1;
+            else
+                this._superSampleDensity = _superSampleDensity;
     }
 
     /**
@@ -288,23 +291,26 @@ public class Render {
     private Color getPixelAdaptiveRayColor(Camera camera, Color background, Point3D pij, double rUp, double rRight, int level) {
         Ray ray = new Ray(camera.getP0(), pij.subtract(camera.getP0()).normalize()); //the main ray
         Color pixelColor = Color.BLACK; //set default color
-        Vector vUp = camera.getvUp();//
+        Vector vUp = camera.getvUp();
         Vector vRight = camera.getvRight();
-        List<Ray> rays = Ray.construct4Rays(ray, pij, rUp, rRight, camera.getvUp(), camera.getvRight()); //..construct the rays at the corners/
+        //construct the rays at the corners
+        List<Ray> rays = Ray.construct4Rays(ray, pij, rUp, rRight, camera.getvUp(), camera.getvRight());
         GeoPoint closestPoint;
-        Color centerColor;
-        Color LTcolor;
-        Color RTcolor;
-        Color LBcolor;
-        Color RBcolor;
+        Color centerColor; //center
+        Color LTcolor; //top left
+        Color RTcolor; //top right
+        Color LBcolor; //bottom left
+        Color RBcolor; //bottom right
 
         closestPoint = findClosestIntersection(ray);
         if(closestPoint == null)
             centerColor = background;
         else
             centerColor = calcColor(closestPoint, ray);
-        if(level == 1)
+
+        if(level == 1) //end of recursion
             return centerColor;
+        //we separate the corners because each one is calculated differently
 
         //top left
         closestPoint = findClosestIntersection(rays.get(0));
@@ -313,11 +319,12 @@ public class Render {
         else
             LTcolor = calcColor(closestPoint, rays.get(0));
         if (!LTcolor.equals(centerColor)) {
+            //we go up half of the height and left half of the width of the pixel/subpixel
             Point3D pXY = pij.add(vUp.scale(rUp / 2d).add(vRight.scale(rRight / -2d)));
+            //we call the recursion with half of the rUp and rRight radius
             LTcolor = getPixelAdaptiveRayColor(camera, background, pXY, rUp / 2d, rRight / 2d, level - 1);
         }
 
-        /*we seperate the corners because each one is calculated differently*/
         //top right
         closestPoint = findClosestIntersection(rays.get(1));
         if(closestPoint == null)
@@ -325,7 +332,9 @@ public class Render {
         else
             RTcolor = calcColor(closestPoint, rays.get(1));
         if (!RTcolor.equals(centerColor)) {
+            //we go up half of the height and right half of the width of the pixel/subpixel
             Point3D pXY = pij.add(vUp.scale(rUp / 2d).add(vRight.scale(rRight / 2d)));
+            //we call the recursion with half of the rUp and rRight radius
             RTcolor = getPixelAdaptiveRayColor(camera, background, pXY, rUp / 2d, rRight / 2d, level - 1);
         }
         //bottom left
@@ -335,7 +344,9 @@ public class Render {
         else
             LBcolor = calcColor(closestPoint, rays.get(2));
         if (!LBcolor.equals(centerColor)) {
+            //we go down half of the height and left half of the width of the pixel/subpixel
             Point3D pXY = pij.add(vUp.scale(rUp / -2d).add(vRight.scale(rRight / -2d)));
+            //we call the recursion with half of the rUp and rRight radius
             LBcolor = getPixelAdaptiveRayColor(camera, background, pXY, rUp / 2d, rRight / 2d, level - 1);
         }
         //bottom right
@@ -345,7 +356,9 @@ public class Render {
         else
             RBcolor = calcColor(closestPoint, rays.get(3));
         if (!RBcolor.equals(centerColor)) {
+            //we go down half of the height and right half of the width of the pixel/subpixel
             Point3D pXY = pij.add(vUp.scale(rUp / -2d).add(vRight.scale(rRight / 2d)));
+            //we call the recursion with half of the rUp and rRight radius
             RBcolor = getPixelAdaptiveRayColor(camera, background, pXY, rUp / 2d, rRight / 2d, level - 1);
         }
         pixelColor = pixelColor.add(centerColor, LTcolor, RTcolor, LBcolor, RBcolor).reduce(5);
@@ -367,7 +380,12 @@ public class Render {
      * @return the average color
      */
     private Color getPixelRayColorSuperSampling(Camera camera, Intersectable geometries, Color background, double distance, int nX, int nY, double width, double height, int i, int j) {
-        double radius = ((_imageWriter.getWidth() / _imageWriter.getNx() + _imageWriter.getHeight() / _imageWriter.getNy()) / 2d) * _superSampleDensity;//the average between the height and the width mults the density
+        //the width of the pixel
+        double Rx = _imageWriter.getWidth() / _imageWriter.getNx();
+        //the height of the pixel
+        double Ry = _imageWriter.getHeight() / _imageWriter.getNy();
+        //we take the minimum and multiply it with the density of the supersampling
+        double radius = Math.min(Rx,Ry) * _superSampleDensity;
         Ray ray = camera.constructRayThroughPixel(nX, nY, j, i, distance, width, height); //the main ray
         GeoPoint closestPoint;
         Color avgColor = Color.BLACK;

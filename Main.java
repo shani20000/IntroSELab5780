@@ -6,7 +6,7 @@ import elements.Camera;
 import elements.DirectionalLight;
 import elements.SpotLight;
 import geometries.*;
-import org.junit.Assert;
+//import org.junit.Assert;
 import primitives.*;
 import renderer.ImageWriter;
 import renderer.Render;

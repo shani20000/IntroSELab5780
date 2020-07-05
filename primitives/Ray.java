@@ -116,19 +116,22 @@ public class Ray {
      * @param vRight
      * @return a list of rays
      */
-
      public static List<Ray> constructRayBeam(Ray mainRay, Point3D point, double radius, int num, Vector vUp, Vector vRight) {
      if (isZero(mainRay.getPoint().distance(point))) {
      throw new IllegalArgumentException("Distance can't be 0");
      }
+     //we raffle num*2 random number and then distinct them to avoid dual rays later.
+     //the chance that we get too few numbers (lower than num) is low, and we prefer doing that instead of creating unnecessary rays
      double[] randomNumbers = rnd.doubles(num * 2, radius * (-1), radius).distinct().toArray();
-     //Vector direction = mainRay.getVector();
      Point3D rayPoint = mainRay.getPoint();
      LinkedList<Ray> rays = new LinkedList<>();
      rays.add(mainRay);
+     //we take the num  first numbers of the array
      for(int i=0; i < Math.min(num, randomNumbers.length-1); i++) {
          Point3D pXY = point;
+         //we add to the point the random radius
          pXY = pXY.add(vUp.scale(randomNumbers[i]).add(vRight.scale(randomNumbers[i + 1])));
+         //we create the ray
          rays.add(new Ray(rayPoint, pXY.subtract(rayPoint).normalize()));
      }
      return rays;
